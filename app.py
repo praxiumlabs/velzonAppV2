@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import json
 import uuid
@@ -19,17 +19,22 @@ import base64
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production-' + str(uuid.uuid4()))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wordpress_manager.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
 
 # Initialize extensions
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -44,7 +49,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    websites = db.relationship('Website', backref='user', lazy=True)
+    websites = db.relationship('Website', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -62,7 +67,7 @@ class Website(db.Model):
     description = db.Column(db.Text)
     service_account_key = db.Column(db.Text)  # Google Service Account JSON
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    indexing_logs = db.relationship('IndexingLog', backref='website', lazy=True)
+    indexing_logs = db.relationship('IndexingLog', backref='website', lazy=True, cascade='all, delete-orphan')
 
 class IndexingLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -75,7 +80,7 @@ class IndexingLog(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    return User.query.get(int(user_id))
 
 # WordPress API Helper Functions
 class WordPressAPI:
@@ -203,10 +208,14 @@ class GoogleIndexingAPI:
 # Routes
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
 @app.route('/login')
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -214,7 +223,7 @@ def login():
 def dashboard():
     try:
         # Get user statistics
-        total_websites = db.session.query(Website).filter_by(user_id=current_user.id).count()
+        total_websites = Website.query.filter_by(user_id=current_user.id).count()
         total_indexing_requests = db.session.query(IndexingLog).join(Website).filter(Website.user_id == current_user.id).count()
         successful_indexing = db.session.query(IndexingLog).join(Website).filter(Website.user_id == current_user.id, IndexingLog.status == 'success').count()
         
@@ -292,10 +301,10 @@ def register():
             return jsonify({'success': False, 'message': 'Password must be at least 6 characters'}), 400
         
         # Check if user exists
-        if db.session.query(User).filter_by(email=email).first():
+        if User.query.filter_by(email=email).first():
             return jsonify({'success': False, 'message': 'Email already registered'}), 400
         
-        if db.session.query(User).filter_by(username=username).first():
+        if User.query.filter_by(username=username).first():
             return jsonify({'success': False, 'message': 'Username already taken'}), 400
         
         # Create new user
@@ -308,6 +317,7 @@ def register():
         return jsonify({'success': True, 'message': 'Account created successfully'})
         
     except Exception as e:
+        print(f"Registration error: {e}")
         return jsonify({'success': False, 'message': 'Registration failed'}), 500
 
 @app.route('/api/login', methods=['POST'])
@@ -322,15 +332,17 @@ def api_login():
             return jsonify({'success': False, 'message': 'Email/Username and password are required'}), 400
         
         # Try to find user by email first, then by username
-        user = db.session.query(User).filter_by(email=login_input).first()
+        user = User.query.filter_by(email=login_input).first()
         if not user:
-            # If not found by email, try by username (convert to lowercase for comparison)
-            user = db.session.query(User).filter(db.func.lower(User.username) == login_input).first()
+            # If not found by email, try by username (case-insensitive)
+            user = User.query.filter(db.func.lower(User.username) == login_input).first()
         
         if not user or not user.check_password(password):
             return jsonify({'success': False, 'message': 'Invalid email/username or password'}), 401
         
+        # Login the user
         login_user(user, remember=remember)
+        session.permanent = remember
         
         return jsonify({
             'success': True, 
@@ -342,6 +354,7 @@ def api_login():
         })
         
     except Exception as e:
+        print(f"Login error: {e}")
         return jsonify({'success': False, 'message': 'Login failed'}), 500
 
 @app.route('/api/logout', methods=['POST'])
@@ -349,6 +362,20 @@ def api_login():
 def api_logout():
     logout_user()
     return jsonify({'success': True, 'message': 'Logged out successfully'})
+
+# CRITICAL FIX: Add the missing /api/user-profile route
+@app.route('/api/user-profile')
+@login_required
+def api_user_profile():
+    try:
+        return jsonify({
+            'username': current_user.username,
+            'email': current_user.email,
+            'member_since': current_user.created_at.strftime('%B %Y')
+        })
+    except Exception as e:
+        print(f"Error loading user profile: {e}")
+        return jsonify({'error': 'Failed to load user profile'}), 500
 
 @app.route('/api/add-website', methods=['POST'])
 @login_required
@@ -388,6 +415,7 @@ def add_website():
         return jsonify({'success': True, 'message': 'Website added successfully', 'website_id': website.id})
         
     except Exception as e:
+        print(f"Error adding website: {e}")
         return jsonify({'success': False, 'message': 'Failed to add website'}), 500
 
 @app.route('/api/submit-indexing', methods=['POST'])
@@ -403,7 +431,7 @@ def submit_indexing():
             return jsonify({'success': False, 'message': 'Website and URL are required'}), 400
         
         # Get website
-        website = db.session.query(Website).filter_by(id=website_id, user_id=current_user.id).first()
+        website = Website.query.filter_by(id=website_id, user_id=current_user.id).first()
         if not website:
             return jsonify({'success': False, 'message': 'Website not found'}), 404
         
@@ -432,6 +460,7 @@ def submit_indexing():
         })
         
     except Exception as e:
+        print(f"Error submitting indexing: {e}")
         return jsonify({'success': False, 'message': 'Submission failed'}), 500
 
 @app.route('/api/update-service-account', methods=['POST'])
@@ -452,7 +481,7 @@ def update_service_account():
             return jsonify({'success': False, 'message': 'Invalid JSON format'}), 400
         
         # Get website
-        website = db.session.query(Website).filter_by(id=website_id, user_id=current_user.id).first()
+        website = Website.query.filter_by(id=website_id, user_id=current_user.id).first()
         if not website:
             return jsonify({'success': False, 'message': 'Website not found'}), 404
         
@@ -463,6 +492,7 @@ def update_service_account():
         return jsonify({'success': True, 'message': 'Service Account key updated successfully'})
         
     except Exception as e:
+        print(f"Error updating service account: {e}")
         return jsonify({'success': False, 'message': 'Failed to update Service Account key'}), 500
 
 @app.route('/api/fetch-post-content', methods=['POST'])
@@ -503,6 +533,7 @@ def fetch_post_content():
         })
         
     except Exception as e:
+        print(f"Error fetching post content: {e}")
         return jsonify({'success': False, 'message': 'Failed to fetch post content'}), 500
 
 @app.route('/api/update-post-content', methods=['POST'])
@@ -532,6 +563,7 @@ def update_post_content():
         })
         
     except Exception as e:
+        print(f"Error updating post content: {e}")
         return jsonify({'success': False, 'message': 'Failed to update post'}), 500
 
 @app.route('/api/generate-bulk-csv', methods=['POST'])
@@ -586,13 +618,14 @@ def generate_bulk_csv():
         )
         
     except Exception as e:
+        print(f"Error generating CSV: {e}")
         return jsonify({'success': False, 'message': 'Failed to generate CSV'}), 500
 
 @app.route('/api/websites')
 @login_required
 def get_websites():
     try:
-        websites = db.session.query(Website).filter_by(user_id=current_user.id).all()
+        websites = Website.query.filter_by(user_id=current_user.id).all()
         websites_data = []
         for website in websites:
             websites_data.append({
@@ -606,22 +639,16 @@ def get_websites():
         
         return jsonify({'success': True, 'websites': websites_data})
     except Exception as e:
+        print(f"Error loading websites: {e}")
         return jsonify({'success': False, 'message': 'Failed to load websites'}), 500
-@login_required
-def api_user_profile():
-    return jsonify({
-        'username': current_user.username,
-        'email': current_user.email,
-        'member_since': current_user.created_at.strftime('%B %Y')
-    })
 
 @app.route('/api/completion-status')
 @login_required
 def completion_status():
     try:
         # Check various completion statuses
-        has_websites = db.session.query(Website).filter_by(user_id=current_user.id).count() > 0
-        has_api_config = db.session.query(Website).filter_by(user_id=current_user.id).filter(Website.service_account_key.isnot(None)).count() > 0
+        has_websites = Website.query.filter_by(user_id=current_user.id).count() > 0
+        has_api_config = Website.query.filter_by(user_id=current_user.id).filter(Website.service_account_key.isnot(None)).count() > 0
         has_indexing_activity = db.session.query(IndexingLog).join(Website).filter(Website.user_id == current_user.id).count() > 0
         has_edited_pages = True  # This could be tracked with actual page edits
         profile_updated = hasattr(current_user, 'profile_updated') and current_user.profile_updated
@@ -635,6 +662,7 @@ def completion_status():
             'profile_updated': profile_updated
         })
     except Exception as e:
+        print(f"Error loading completion status: {e}")
         return jsonify({'success': False, 'message': 'Failed to load completion status'}), 500
 
 @app.route('/api/update-profile', methods=['POST'])
@@ -665,13 +693,13 @@ def update_profile():
         
         # Check if email is already taken by another user
         if email != current_user.email:
-            existing_user = db.session.query(User).filter_by(email=email).first()
+            existing_user = User.query.filter_by(email=email).first()
             if existing_user and existing_user.id != current_user.id:
                 return jsonify({'success': False, 'message': 'Email is already taken'}), 400
         
         # Check if username is already taken by another user
         if display_name != current_user.username:
-            existing_user = db.session.query(User).filter_by(username=display_name).first()
+            existing_user = User.query.filter_by(username=display_name).first()
             if existing_user and existing_user.id != current_user.id:
                 return jsonify({'success': False, 'message': 'Username is already taken'}), 400
         
@@ -690,37 +718,26 @@ def update_profile():
         })
         
     except Exception as e:
+        print(f"Error updating profile: {e}")
         return jsonify({'success': False, 'message': 'Failed to update profile'}), 500
 
 @app.route('/api/remove-website/<int:website_id>', methods=['DELETE'])
 @login_required
 def remove_website(website_id):
     try:
-        website = db.session.query(Website).filter_by(id=website_id, user_id=current_user.id).first()
+        website = Website.query.filter_by(id=website_id, user_id=current_user.id).first()
         if not website:
             return jsonify({'success': False, 'message': 'Website not found'}), 404
         
-        # Delete associated indexing logs first
-        db.session.query(IndexingLog).filter_by(website_id=website_id).delete()
-        
-        # Delete the website
+        # Delete associated indexing logs first (handled by cascade)
         db.session.delete(website)
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'Website removed successfully'})
         
     except Exception as e:
+        print(f"Error removing website: {e}")
         return jsonify({'success': False, 'message': 'Failed to remove website'}), 500
-@login_required
-def api_user_profile():
-    try:
-        return jsonify({
-            'username': current_user.username,
-            'email': current_user.email,
-            'member_since': current_user.created_at.strftime('%B %Y')
-        })
-    except Exception as e:
-        return jsonify({'error': 'Failed to load user profile'}), 500
 
 @app.route('/api/dashboard-stats')
 @login_required
@@ -748,20 +765,26 @@ def dashboard_stats():
         })
         
     except Exception as e:
+        print(f"Error loading dashboard stats: {e}")
         return jsonify({'success': False, 'message': 'Failed to load dashboard stats'}), 500
 
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({'error': 'Not found'}), 404
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Not found'}), 404
+    return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    return jsonify({'error': 'Internal server error'}), 500
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Internal server error'}), 500
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        print("Database tables created successfully!")
     
     print("=" * 60)
     print("🚀 WordPress API Manager - Starting Application")

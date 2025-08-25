@@ -446,8 +446,8 @@
         </div>
         <div class="user-section">
             <div class="greeting">
-                <span id="greeting">Good day</span>, 
                 <div class="user-avatar" id="userAvatar">U</div>
+                <span id="greeting">Good day</span>
                 <span id="userName">User</span>
             </div>
             <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
@@ -460,37 +460,37 @@
         <a href="/dashboard" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <span class="nav-icon">📊</span>
             Dashboard
-            <span class="completion-check" id="dashboard-check" style="display: none;">✓</span>
+            <span class="completion-check" id="dashboard-check" style="display: none;"></span>
         </a>
         <a href="/manage-websites" class="nav-item {% if request.endpoint == 'manage_websites' %}active{% endif %}">
             <span class="nav-icon">🌐</span>
             Manage Websites
-            <span class="completion-check" id="websites-check" style="display: none;">✓</span>
+            <span class="completion-check" id="websites-check" style="display: none;"></span>
         </a>
         <a href="/index-api" class="nav-item {% if request.endpoint == 'index_api' %}active{% endif %}">
             <span class="nav-icon">🔗</span>
             Index API
-            <span class="completion-check" id="indexing-check" style="display: none;">✓</span>
+            <span class="completion-check" id="indexing-check" style="display: none;"></span>
         </a>
         <a href="/api-index-settings" class="nav-item {% if request.endpoint == 'api_index_settings' %}active{% endif %}">
             <span class="nav-icon">⚙️</span>
             API Settings
-            <span class="completion-check" id="api-check" style="display: none;">✓</span>
+            <span class="completion-check" id="api-check" style="display: none;"></span>
         </a>
         <a href="/single-page-editor" class="nav-item {% if request.endpoint == 'single_page_editor' %}active{% endif %}">
             <span class="nav-icon">📝</span>
             Single Page Editor
-            <span class="completion-check" id="single-edit-check" style="display: none;">✓</span>
+            <span class="completion-check" id="single-edit-check" style="display: none;"></span>
         </a>
         <a href="/bulk-page-editor" class="nav-item {% if request.endpoint == 'bulk_page_editor' %}active{% endif %}">
             <span class="nav-icon">📚</span>
             Bulk Page Editor
-            <span class="completion-check" id="bulk-edit-check" style="display: none;">✓</span>
+            <span class="completion-check" id="bulk-edit-check" style="display: none;"></span>
         </a>
         <a href="/user-profile" class="nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
             <span class="nav-icon">👤</span>
             User Profile
-            <span class="completion-check" id="profile-check" style="display: none;">✓</span>
+            <span class="completion-check" id="profile-check" style="display: none;"></span>
         </a>
     </nav>
     {% endif %}

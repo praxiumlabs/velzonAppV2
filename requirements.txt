@@ -1,13 +1,30 @@
+# Core Flask dependencies
 Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Werkzeug==3.0.1
 SQLAlchemy==2.0.23
+
+# API and Web requests
 requests==2.31.0
+
+# Google API dependencies
 google-api-python-client==2.108.0
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.1.1
+
+# Environment and configuration
 python-dotenv==1.0.0
+
+# Production server
 gunicorn==21.2.0
+
+# HTML parsing (if needed)
 beautifulsoup4==4.12.2
+
+# Additional utilities
+click==8.1.7
+itsdangerous==2.1.2
+Jinja2==3.1.2
+MarkupSafe==2.1.3
