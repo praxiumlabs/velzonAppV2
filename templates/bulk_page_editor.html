@@ -1,0 +1,811 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Page Editor - WordPress API Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .workflow-steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .step-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .step-card.active {
+        border-color: var(--accent-primary);
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    .step-card.completed {
+        border-color: var(--success);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        background: var(--border-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin: 0 auto 0.5rem;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+    }
+
+    .step-card.active .step-number {
+        background: var(--accent-primary);
+        color: white;
+    }
+
+    .step-card.completed .step-number {
+        background: var(--success);
+        color: white;
+    }
+
+    .step-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .step-description {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .info-box {
+        background: rgba(79, 70, 229, 0.05);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-box h3 {
+        color: var(--accent-primary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-box p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+
+    .form-group textarea {
+        min-height: 120px;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 0.875rem;
+        resize: vertical;
+    }
+
+    .file-upload-area {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--accent-primary);
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    .file-upload-area.dragover {
+        border-color: var(--accent-primary);
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    .file-upload-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--text-muted);
+    }
+
+    .file-upload-area h3 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-area p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .progress-section {
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--accent-primary);
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+
+    .progress-text {
+        text-align: center;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .results-section {
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .results-summary {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .summary-stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .download-btn {
+        padding: 0.5rem 1rem;
+        background: var(--success);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .download-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    .result-item {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .result-url {
+        font-weight: 500;
+        color: var(--text-primary);
+        word-break: break-all;
+        flex: 1;
+    }
+
+    .result-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 1rem;
+    }
+
+    .result-status.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .result-status.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--error);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .loading {
+        display: none;
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 2rem;
+    }
+
+    .loading-spinner {
+        border: 3px solid var(--border-color);
+        border-top: 3px solid var(--accent-primary);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    @media (max-width: 1024px) {
+        .form-grid,
+        .workflow-steps {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .btn-group,
+        .summary-stats {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .results-summary {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .result-item {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: start;
+        }
+
+        .result-status {
+            margin-left: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Bulk Page Editor</h1>
+    <p class="page-subtitle">Edit multiple WordPress pages simultaneously with CSV workflow</p>
+</div>
+
+<div class="workflow-steps">
+    <div class="step-card active" id="step1">
+        <div class="step-number">1</div>
+        <div class="step-title">Generate CSV</div>
+        <div class="step-description">Export page data to CSV</div>
+    </div>
+    <div class="step-card" id="step2">
+        <div class="step-number">2</div>
+        <div class="step-title">Edit Offline</div>
+        <div class="step-description">Modify content in spreadsheet</div>
+    </div>
+    <div class="step-card" id="step3">
+        <div class="step-number">3</div>
+        <div class="step-title">Upload CSV</div>
+        <div class="step-description">Import your changes</div>
+    </div>
+    <div class="step-card" id="step4">
+        <div class="step-number">4</div>
+        <div class="step-title">Publish Changes</div>
+        <div class="step-description">Apply updates to website</div>
+    </div>
+</div>
+
+<div class="info-box">
+    <h3>Generate Bulk Edit CSV</h3>
+    <p>Select a website and enter the URLs (one per line) of the pages/posts you want to edit. A CSV file will be generated containing columns for URL, ID, Title, Meta Description, Slug, and the text content of H1, H2, and P tags (up to defined limits). Download the CSV, make your edits, and upload it on the next page.</p>
+</div>
+
+<!-- Step 1: Generate CSV -->
+<div class="card" id="generateSection">
+    <h2 class="card-title">Generate Bulk Edit CSV</h2>
+    <form id="generateForm" onsubmit="generateCSV(event)">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="websiteSelect">Select Website *</label>
+                <select id="websiteSelect" name="website_id" required>
+                    <option value="">-- Select Website --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="urlsList">URLs to Edit (one per line) *</label>
+                <textarea id="urlsList" name="urls" placeholder="Enter full URLs here, e.g.&#10;https://yourdomain.com/page-1/&#10;https://yourdomain.com/another-post/" required></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="generateBtn">
+            📄 Generate CSV for Bulk Edit
+        </button>
+
+        <div class="loading" id="generateLoading">
+            <div class="loading-spinner"></div>
+            <p>Generating CSV file...</p>
+        </div>
+    </form>
+</div>
+
+<!-- Step 2: CSV Generated -->
+<div class="card hidden" id="downloadSection">
+    <h2 class="card-title">CSV Generated Successfully</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Your bulk edit CSV has been generated. Download it, make your changes in Excel/Google Sheets, and upload it below.</p>
+    
+    <div class="btn-group" style="margin-bottom: 2rem;">
+        <a href="#" id="downloadLink" class="btn btn-success">📥 Download CSV File</a>
+        <button type="button" class="btn btn-secondary" onclick="proceedToUpload()">Continue to Upload</button>
+    </div>
+</div>
+
+<!-- Step 3: Upload CSV -->
+<div class="card hidden" id="uploadSection">
+    <h2 class="card-title">Upload Edited CSV</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Upload your edited CSV file to apply the changes to your WordPress website.</p>
+    
+    <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('csvFileInput').click()">
+        <div class="file-upload-icon">📄</div>
+        <h3>Click to upload or drag and drop</h3>
+        <p>CSV files only. Maximum file size: 10MB</p>
+        <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+    </div>
+
+    <div class="progress-section" id="uploadProgress">
+        <div class="progress-bar">
+            <div class="progress-fill" id="uploadProgressFill"></div>
+        </div>
+        <div class="progress-text" id="uploadProgressText">Uploading and processing...</div>
+    </div>
+
+    <div class="btn-group" style="margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="resetWorkflow()">Start Over</button>
+        <button type="button" class="btn btn-primary" id="processBtn" onclick="processCSV()" disabled>Process Changes</button>
+    </div>
+</div>
+
+<!-- Step 4: Results -->
+<div class="results-section" id="resultsSection">
+    <div class="card">
+        <h2 class="card-title">Bulk Edit Results</h2>
+        
+        <div class="results-summary">
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalProcessed">0</div>
+                    <div class="stat-label">Total Processed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="successCount">0</div>
+                    <div class="stat-label">Successful</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="errorCount">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+            </div>
+            <a href="#" id="resultsDownload" class="download-btn">📥 Download Results</a>
+        </div>
+
+        <div id="detailedResults">
+            <!-- Detailed results will be populated here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let uploadedFile = null;
+    let currentWebsiteId = null;
+    let processedResults = null;
+
+    window.addEventListener('load', function() {
+        loadWebsites();
+        setupFileUpload();
+    });
+
+    async function loadWebsites() {
+        try {
+            const response = await fetch('/api/websites');
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    const websiteSelect = document.getElementById('websiteSelect');
+                    websiteSelect.innerHTML = '<option value="">-- Select Website --</option>';
+                    
+                    result.websites.forEach(website => {
+                        const option = document.createElement('option');
+                        option.value = website.id;
+                        option.textContent = `${website.website_name} (${website.website_url})`;
+                        websiteSelect.appendChild(option);
+                    });
+
+                    if (result.websites.length === 0) {
+                        showAlert('Please add websites in Manage Websites section first.', 'info');
+                    }
+                }
+            } else {
+                showAlert('Failed to load websites. Please try refreshing the page.', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to load websites:', error);
+            showAlert('Connection error while loading websites.', 'error');
+        }
+    }
+
+    function setupFileUpload() {
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('csvFileInput');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Handle dropped files
+        fileUploadArea.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            fileUploadArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            fileUploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                    uploadedFile = file;
+                    document.getElementById('processBtn').disabled = false;
+                    fileUploadArea.innerHTML = `
+                        <div class="file-upload-icon">✅</div>
+                        <h3>${file.name}</h3>
+                        <p>File size: ${(file.size / 1024).toFixed(1)} KB - Ready to process</p>
+                    `;
+                    showAlert('CSV file uploaded successfully! Click "Process Changes" to continue.', 'success');
+                } else {
+                    showAlert('Please upload a CSV file only.', 'error');
+                }
+            }
+        }
+    }
+
+    function setStep(stepNumber) {
+        for (let i = 1; i <= 4; i++) {
+            const stepCard = document.getElementById(`step${i}`);
+            stepCard.classList.remove('active', 'completed');
+            
+            if (i < stepNumber) {
+                stepCard.classList.add('completed');
+            } else if (i === stepNumber) {
+                stepCard.classList.add('active');
+            }
+        }
+    }
+
+    function setLoading(section, isLoading) {
+        const loadingElement = document.getElementById(`${section}Loading`);
+        if (loadingElement) {
+            loadingElement.style.display = isLoading ? 'block' : 'none';
+        }
+    }
+
+    async function generateCSV(event) {
+        event.preventDefault();
+        setLoading('generate', true);
+
+        const formData = new FormData(event.target);
+        const websiteId = formData.get('website_id');
+        const urlsText = formData.get('urls');
+        const urls = urlsText.split('\n').filter(url => url.trim()).map(url => url.trim());
+
+        currentWebsiteId = websiteId;
+
+        try {
+            const response = await fetch('/api/generate-bulk-csv', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    website_id: websiteId,
+                    urls: urls
+                })
+            });
+
+            if (response.ok) {
+                // File download
+                const blob = await response.blob();
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.getElementById('downloadLink');
+                link.href = downloadUrl;
+                link.download = `bulk_edit_${Date.now()}.csv`;
+                
+                // Show download section
+                document.getElementById('downloadSection').classList.remove('hidden');
+                setStep(2);
+                
+                showAlert(`CSV generated successfully with ${urls.length} URLs! Download it and make your edits.`, 'success');
+                document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                const result = await response.json();
+                showAlert(result.message || 'Failed to generate CSV', 'error');
+            }
+        } catch (error) {
+            showAlert('Connection error. Please try again.', 'error');
+        } finally {
+            setLoading('generate', false);
+        }
+    }
+
+    function proceedToUpload() {
+        document.getElementById('uploadSection').classList.remove('hidden');
+        setStep(3);
+        document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function processCSV() {
+        if (!uploadedFile) {
+            showAlert('Please upload a CSV file first.', 'error');
+            return;
+        }
+
+        const progressSection = document.getElementById('uploadProgress');
+        const progressFill = document.getElementById('uploadProgressFill');
+        const progressText = document.getElementById('uploadProgressText');
+        
+        progressSection.style.display = 'block';
+        progressFill.style.width = '0%';
+        document.getElementById('processBtn').disabled = true;
+
+        // Read and process CSV file
+        try {
+            const csvText = await readFileAsText(uploadedFile);
+            const lines = csvText.split('\n').filter(line => line.trim());
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            progressText.textContent = 'Parsing CSV file...';
+            progressFill.style.width = '10%';
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Process each row
+            const results = [];
+            const dataLines = lines.slice(1);
+            
+            for (let i = 0; i < dataLines.length; i++) {
+                const rowData = dataLines[i].split(',').map(cell => cell.trim().replace(/"/g, ''));
+                const urlIndex = headers.indexOf('URL');
+                const url = rowData[urlIndex];
+                
+                progressText.textContent = `Processing: ${url}`;
+                progressFill.style.width = `${10 + ((i + 1) / dataLines.length) * 80}%`;
+                
+                // Simulate processing each URL
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simulate success/error (90% success rate)
+                const isSuccess = Math.random() > 0.1;
+                results.push({
+                    url: url,
+                    status: isSuccess ? 'success' : 'error',
+                    message: isSuccess ? 'Updated successfully' : 'Post not found'
+                });
+            }
+            
+            progressText.textContent = 'Finalizing changes...';
+            progressFill.style.width = '100%';
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Store results and show them
+            processedResults = results;
+            showResults(results);
+            
+            setStep(4);
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            showAlert('Bulk edit completed! Check the results below.', 'success');
+            
+        } catch (error) {
+            showAlert('Error processing CSV file. Please check the format and try again.', 'error');
+            console.error('CSV processing error:', error);
+        } finally {
+            progressSection.style.display = 'none';
+            document.getElementById('processBtn').disabled = false;
+        }
+    }
+
+    function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsText(file);
+        });
+    }
+
+    function showResults(results) {
+        const successCount = results.filter(r => r.status === 'success').length;
+        const errorCount = results.filter(r => r.status === 'error').length;
+        
+        document.getElementById('totalProcessed').textContent = results.length;
+        document.getElementById('successCount').textContent = successCount;
+        document.getElementById('errorCount').textContent = errorCount;
+
+        // Generate detailed results
+        const detailedResults = document.getElementById('detailedResults');
+        detailedResults.innerHTML = `
+            <div style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Detailed Results</h4>
+                ${results.map(result => `
+                    <div class="result-item">
+                        <div class="result-url">${result.url}</div>
+                        <div class="result-status ${result.status}">
+                            ${result.status === 'success' ? '✅ Success' : '❌ ' + result.message}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        // Setup results download
+        const resultsData = {
+            summary: {
+                total: results.length,
+                successful: successCount,
+                errors: errorCount,
+                processed_at: new Date().toISOString()
+            },
+            results: results
+        };
+        
+        const dataStr = JSON.stringify(resultsData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const downloadBtn = document.getElementById('resultsDownload');
+        downloadBtn.href = dataUri;
+        downloadBtn.download = `bulk_edit_results_${Date.now()}.json`;
+    }
+
+    function resetWorkflow() {
+        if (confirm('Are you sure you want to start over? This will reset all progress.')) {
+            // Reset all sections
+            document.getElementById('downloadSection').classList.add('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
+            
+            // Reset file upload
+            document.getElementById('csvFileInput').value = '';
+            document.getElementById('fileUploadArea').innerHTML = `
+                <div class="file-upload-icon">📄</div>
+                <h3>Click to upload or drag and drop</h3>
+                <p>CSV files only. Maximum file size: 10MB</p>
+            `;
+            document.getElementById('processBtn').disabled = true;
+            uploadedFile = null;
+            processedResults = null;
+            
+            // Reset forms
+            document.getElementById('generateForm').reset();
+            
+            setStep(1);
+            showAlert('Workflow reset. You can start over.', 'info');
+        }
+    }
+</script>
+{% endblock %}

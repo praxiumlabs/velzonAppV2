@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index API - WordPress API Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 260px;
+            height: calc(100vh - 70px);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #f1f5f9;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: calc(100vh - 70px);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4338ca;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+
+        .alert.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .alert.warning {
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            color: #d97706;
+        }
+
+        .results-section {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-url {
+            font-weight: 600;
+            color: #1e293b;
+            word-break: break-all;
+        }
+
+        .result-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .result-status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .result-status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .result-details {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-box h3 {
+            color: #0c4a6e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p {
+            color: #0369a1;
+            font-size: 0.875rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #6b7280;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1>WordPress API Manager</h1>
+        </div>
+        <div class="user-menu">
+            <div class="user-info">
+                <span id="username">User</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <nav class="sidebar">
+        <a href="/dashboard" class="nav-item">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </a>
+        <a href="/manage-websites" class="nav-item">
+            <span class="nav-icon">🌐</span>
+            Manage Websites
+        </a>
+        <a href="/index-api" class="nav-item active">
+            <span class="nav-icon">🔗</span>
+            Index API
+        </a>
+        <a href="/api-index-settings" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            API Settings
+        </a>
+        <a href="/single-page-editor" class="nav-item">
+            <span class="nav-icon">📝</span>
+            Single Page Editor
+        </a>
+        <a href="/bulk-page-editor" class="nav-item">
+            <span class="nav-icon">📚</span>
+            Bulk Page Editor
+        </a>
+        <a href="/user-profile" class="nav-item">
+            <span class="nav-icon">👤</span>
+            User Profile
+        </a>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Index API</h1>
+            <p class="page-subtitle">Submit URL to Google</p>
+        </div>
+
+        <div class="info-box">
+            <h3>Google Indexing API</h3>
+            <p>Select a website, enter a single URL, choose the action, and submit it to the Google Indexing API. Ensure API settings are configured.</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="card">
+            <h2 class="card-title">Submit URL to Google</h2>
+            <form id="indexingForm" onsubmit="submitIndexing(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="websiteSelect">Select Website *</label>
+                        <select id="websiteSelect" name="website_id" required>
+                            <option value="">-- Select Website --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="urlInput">URL to Submit *</label>
+                        <input type="url" id="urlInput" name="url" placeholder="https://yourdomain.com/your-page-slug/" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="actionSelect">Action *</label>
+                        <select id="actionSelect" name="action" required>
+                            <option value="URL_UPDATED">URL Updated</option>
+                            <option value="URL_DELETED">URL Deleted</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">Submit to Google</button>
+                <div class="loading" id="submitLoading">Submitting to Google Indexing API...</div>
+            </form>
+        </div>
+
+        <div id="resultsSection" class="results-section">
+            <div class="card">
+                <h2 class="card-title">Submission Results</h2>
+                <div id="resultsContainer"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.addEventListener('load', function() {
+            loadUserProfile();
+            loadWebsites();
+        });
+
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/user-profile');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('username').textContent = user.username;
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        async function loadWebsites() {
+            try {
+                const response = await fetch('/api/websites');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        const websiteSelect = document.getElementById('websiteSelect');
+                        websiteSelect.innerHTML = '<option value="">-- Select Website --</option>';
+                        
+                        result.websites.forEach(website => {
+                            const option = document.createElement('option');
+                            option.value = website.id;
+                            option.textContent = `${website.website_name} (${website.website_url})`;
+                            websiteSelect.appendChild(option);
+                        });
+
+                        if (result.websites.length === 0) {
+                            showAlert('Please add websites in Manage Websites section first.', 'info');
+                        }
+                    }
+                } else {
+                    showAlert('Failed to load websites. Please try refreshing the page.', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load websites:', error);
+                showAlert('Connection error while loading websites.', 'error');
+            }
+        }
+
+        function showAlert(message, type = 'error') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 10000);
+        }
+
+        function setLoading(isLoading) {
+            const btn = document.getElementById('submitBtn');
+            const loading = document.getElementById('submitLoading');
+            
+            if (isLoading) {
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+                loading.style.display = 'block';
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Submit to Google';
+                loading.style.display = 'none';
+            }
+        }
+
+        async function submitIndexing(event) {
+            event.preventDefault();
+            setLoading(true);
+
+            const formData = new FormData(event.target);
+            const data = {
+                website_id: formData.get('website_id'),
+                url: formData.get('url'),
+                action: formData.get('action')
+            };
+
+            try {
+                const response = await fetch('/api/submit-indexing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('URL submitted successfully to Google Indexing API!', 'success');
+                    displayResult(data.url, data.action, 'success', result.result);
+                } else {
+                    showAlert(`Submission failed: ${result.message}`, 'error');
+                    displayResult(data.url, data.action, 'error', result.message);
+                }
+            } catch (error) {
+                showAlert('Connection error. Please try again.', 'error');
+                displayResult(data.url, data.action, 'error', 'Connection error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function displayResult(url, action, status, details) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            // Show results section
+            resultsSection.style.display = 'block';
+            
+            // Create result item
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `
+                <div class="result-header">
+                    <div class="result-url">${url}</div>
+                    <div class="result-status ${status}">${status}</div>
+                </div>
+                <div class="result-details">
+                    <strong>Action:</strong> ${action}<br>
+                    <strong>Time:</strong> ${new Date().toLocaleString()}<br>
+                    <strong>Details:</strong> ${typeof details === 'object' ? JSON.stringify(details, null, 2) : details}
+                </div>
+            `;
+            
+            // Add to top of results
+            resultsContainer.insertBefore(resultItem, resultsContainer.firstChild);
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

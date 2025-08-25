@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Websites - WordPress API Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .websites-list {
+        grid-column: 1 / -1;
+        margin-bottom: 2rem;
+    }
+
+    .website-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+
+    .website-item:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .website-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .website-info h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .website-url {
+        color: var(--accent-primary);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .website-url:hover {
+        text-decoration: underline;
+    }
+
+    .website-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .website-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--success);
+    }
+
+    .website-description {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .website-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-icon {
+        padding: 0.5rem;
+        border-radius: 6px;
+        font-size: 16px;
+        min-width: auto;
+    }
+
+    .setup-guide {
+        background: linear-gradient(135deg, var(--accent-primary), #1d4ed8);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .setup-guide h3 {
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .setup-guide ol {
+        padding-left: 1.5rem;
+    }
+
+    .setup-guide li {
+        margin-bottom: 0.75rem;
+        opacity: 0.9;
+    }
+
+    .setup-guide strong {
+        font-weight: 600;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        border: 2px dashed var(--border-color);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .loading-skeleton {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    @media (max-width: 1024px) {
+        .content-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .website-header {
+            flex-direction: column;
+            align-items: start;
+            gap: 1rem;
+        }
+        
+        .website-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Manage Websites</h1>
+    <p class="page-subtitle">Add, edit, or remove websites connected to your account</p>
+</div>
+
+<!-- Your Websites Section (Top) -->
+<div class="websites-list">
+    <h2 class="card-title">Your Websites</h2>
+    <div id="websitesList">
+        <div class="loading-skeleton">
+            <div style="height: 20px; background: var(--border-color); border-radius: 4px; margin-bottom: 10px;"></div>
+            <div style="height: 16px; background: var(--border-color); border-radius: 4px; width: 60%;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="content-layout">
+    <div class="card">
+        <h2 class="card-title">Add New Website</h2>
+        <form id="addWebsiteForm" onsubmit="addWebsite(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="websiteName">Website Name *</label>
+                    <input type="text" id="websiteName" name="website_name" placeholder="My WordPress Site" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="websiteUrl">Website URL *</label>
+                    <input type="url" id="websiteUrl" name="website_url" placeholder="https://example.com/" required>
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">Include https:// and trailing slash</small>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="wpUsername">WordPress Username *</label>
+                    <input type="text" id="wpUsername" name="wp_username" placeholder="admin" required>
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">Your WordPress admin username</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="wpApiKey">WordPress API Key *</label>
+                    <input type="password" id="wpApiKey" name="wp_api_key" placeholder="xxxx xxxx xxxx xxxx" required>
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">Application Password from WordPress</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description (Optional)</label>
+                <textarea id="description" name="description" placeholder="Brief description of this website" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="addBtn">
+                <span>🌐</span> Add Website
+            </button>
+        </form>
+    </div>
+
+    <div class="setup-guide">
+        <h3>🔧 WordPress API Setup Guide</h3>
+        <ol>
+            <li><strong>Login to WordPress Admin</strong><br>
+                <small>Access your WordPress dashboard</small>
+            </li>
+            <li><strong>Navigate to Users → Profile</strong><br>
+                <small>Go to your user profile settings</small>
+            </li>
+            <li><strong>Find Application Passwords</strong><br>
+                <small>Scroll down to the Application Passwords section</small>
+            </li>
+            <li><strong>Create New Password</strong><br>
+                <small>Name it "API Manager" and click "Add New"</small>
+            </li>
+            <li><strong>Copy the Password</strong><br>
+                <small>Use the generated password as your API key above</small>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.addEventListener('load', function() {
+        loadWebsites();
+    });
+
+    async function loadWebsites() {
+        try {
+            const response = await fetch('/api/websites');
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    displayWebsites(result.websites);
+                } else {
+                    showEmptyState();
+                }
+            } else {
+                showEmptyState();
+            }
+        } catch (error) {
+            console.error('Failed to load websites:', error);
+            showEmptyState();
+        }
+    }
+
+    function displayWebsites(websites) {
+        const websitesContainer = document.getElementById('websitesList');
+        
+        if (websites.length === 0) {
+            showEmptyState();
+            return;
+        }
+
+        websitesContainer.innerHTML = websites.map(website => `
+            <div class="website-item">
+                <div class="website-header">
+                    <div class="website-info">
+                        <h3>${website.website_name}</h3>
+                        <a href="${website.website_url}" target="_blank" class="website-url">${website.website_url}</a>
+                    </div>
+                    <div class="website-actions">
+                        <button class="btn btn-secondary btn-icon" onclick="editWebsite(${website.id})" title="Edit Website">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger btn-icon" onclick="removeWebsite(${website.id}, '${website.website_name}')" title="Remove Website">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="website-status">
+                    <div class="status-dot"></div>
+                    Connected
+                </div>
+                
+                ${website.description ? `<div class="website-description">${website.description}</div>` : ''}
+                
+                <div class="website-meta">
+                    <span>Added ${website.created_at}</span>
+                    <span>Google API: ${website.has_service_account ? '✅ Configured' : '❌ Not configured'}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showEmptyState() {
+        const websitesContainer = document.getElementById('websitesList');
+        websitesContainer.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🌐</div>
+                <h3>No websites added yet</h3>
+                <p>Add your first WordPress website using the form below to get started!</p>
+            </div>
+        `;
+    }
+
+    async function addWebsite(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('addBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Adding...';
+
+        const formData = new FormData(event.target);
+        const data = {
+            website_name: formData.get('website_name'),
+            website_url: formData.get('website_url'),
+            wp_username: formData.get('wp_username'),
+            wp_api_key: formData.get('wp_api_key'),
+            description: formData.get('description')
+        };
+
+        try {
+            const response = await fetch('/api/add-website', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert('Website added successfully! 🎉', 'success');
+                event.target.reset();
+                loadWebsites(); // Reload the websites list
+            } else {
+                showAlert(result.message, 'error');
+            }
+        } catch (error) {
+            showAlert('Connection error. Please try again.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🌐</span> Add Website';
+        }
+    }
+
+    async function removeWebsite(websiteId, websiteName) {
+        if (!confirm(`Are you sure you want to remove "${websiteName}"?\n\nThis will permanently delete the website and all associated data.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/remove-website/${websiteId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert('Website removed successfully! 🗑️', 'success');
+                loadWebsites(); // Reload the websites list
+            } else {
+                showAlert(result.message, 'error');
+            }
+        } catch (error) {
+            showAlert('Connection error. Please try again.', 'error');
+        }
+    }
+
+    function editWebsite(websiteId) {
+        // For now, just show an alert. In a full implementation, this would open an edit modal
+        showAlert('Edit functionality coming soon! For now, you can remove and re-add the website.', 'info');
+    }
+
+    function showAlert(message, type = 'error') {
+        const alert = document.getElementById('alert');
+        alert.textContent = message;
+        alert.className = `alert ${type}`;
+        alert.style.display = 'block';
+        
+        setTimeout(() => {
+            alert.style.display = 'none';
+        }, 5000);
+    }
+</script>
+{% endblock %}

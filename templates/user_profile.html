@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - WordPress API Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 260px;
+            height: calc(100vh - 70px);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #f1f5f9;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: calc(100vh - 70px);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            margin: 0 auto 1.5rem;
+        }
+
+        .profile-info {
+            text-align: center;
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-email {
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-date {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .form-group input:disabled {
+            background: #f9fafb;
+            color: #6b7280;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4338ca;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+
+        .alert.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .alert.warning {
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            color: #d97706;
+        }
+
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.website {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .activity-icon.indexing {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .activity-icon.edit {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .danger-zone {
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #fef2f2;
+        }
+
+        .danger-zone h3 {
+            color: #991b1b;
+            margin-bottom: 0.5rem;
+        }
+
+        .danger-zone p {
+            color: #7f1d1d;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1>WordPress API Manager</h1>
+        </div>
+        <div class="user-menu">
+            <div class="user-info">
+                <span id="username">User</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <nav class="sidebar">
+        <a href="/dashboard" class="nav-item">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </a>
+        <a href="/manage-websites" class="nav-item">
+            <span class="nav-icon">🌐</span>
+            Manage Websites
+        </a>
+        <a href="/index-api" class="nav-item">
+            <span class="nav-icon">🔗</span>
+            Index API
+        </a>
+        <a href="/api-index-settings" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            API Settings
+        </a>
+        <a href="/single-page-editor" class="nav-item">
+            <span class="nav-icon">📝</span>
+            Single Page Editor
+        </a>
+        <a href="/bulk-page-editor" class="nav-item">
+            <span class="nav-icon">📚</span>
+            Bulk Page Editor
+        </a>
+        <a href="/user-profile" class="nav-item active">
+            <span class="nav-icon">👤</span>
+            User Profile
+        </a>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">User Profile</h1>
+            <p class="page-subtitle">Manage your account settings and view your activity</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="profile-grid">
+            <!-- Left Column: Profile Overview -->
+            <div>
+                <div class="card">
+                    <div class="profile-avatar" id="profileAvatar">👤</div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName">Loading...</div>
+                        <div class="profile-email" id="profileEmail">Loading...</div>
+                        <div class="profile-date">Member since <span id="memberSince">Loading...</span></div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalWebsites">0</div>
+                            <div class="stat-label">Websites</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalRequests">0</div>
+                            <div class="stat-label">API Requests</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="pagesEdited">0</div>
+                            <div class="stat-label">Pages Edited</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="successRate">0%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Settings and Activity -->
+            <div>
+                <!-- Account Settings -->
+                <div class="card">
+                    <h2 class="card-title">Account Settings</h2>
+                    <form id="profileForm" onsubmit="updateProfile(event)">
+                        <div class="form-group">
+                            <label for="displayName">Display Name</label>
+                            <input type="text" id="displayName" name="display_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="emailAddress">Email Address</label>
+                            <input type="email" id="emailAddress" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" name="current_password" placeholder="Leave blank to keep current password">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" name="new_password" placeholder="Leave blank to keep current password">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm new password">
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                            <button type="submit" class="btn btn-primary" id="updateBtn">Update Profile</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <h2 class="card-title">Recent Activity</h2>
+                    <div class="activity-feed" id="activityFeed">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <p>No recent activity found.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="card">
+                    <h2 class="card-title">Danger Zone</h2>
+                    <div class="danger-zone">
+                        <h3>Delete Account</h3>
+                        <p>Once you delete your account, there is no going back. Please be certain. All your websites, settings, and data will be permanently deleted.</p>
+                        <button type="button" class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let originalProfileData = {};
+
+        window.addEventListener('load', function() {
+            loadUserProfile();
+            loadUserStats();
+            loadRecentActivity();
+        });
+
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/user-profile');
+                if (response.ok) {
+                    const user = await response.json();
+                    
+                    // Update profile display
+                    document.getElementById('username').textContent = user.username;
+                    document.getElementById('profileName').textContent = user.username;
+                    document.getElementById('profileEmail').textContent = user.email;
+                    document.getElementById('memberSince').textContent = user.member_since;
+                    
+                    // Generate avatar initial
+                    const initial = user.username.charAt(0).toUpperCase();
+                    document.getElementById('profileAvatar').textContent = initial;
+                    
+                    // Populate form
+                    document.getElementById('displayName').value = user.username;
+                    document.getElementById('emailAddress').value = user.email;
+                    
+                    // Store original data
+                    originalProfileData = {
+                        username: user.username,
+                        email: user.email
+                    };
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        async function loadUserStats() {
+            try {
+                // For now, we'll use mock data
+                // In a real implementation, this would fetch from the backend
+                document.getElementById('totalWebsites').textContent = '3';
+                document.getElementById('totalRequests').textContent = '147';
+                document.getElementById('pagesEdited').textContent = '42';
+                document.getElementById('successRate').textContent = '98%';
+            } catch (error) {
+                console.error('Failed to load user stats:', error);
+            }
+        }
+
+        function loadRecentActivity() {
+            const activityFeed = document.getElementById('activityFeed');
+            
+            // Sample activity data
+            const activities = [
+                {
+                    type: 'website',
+                    title: 'Added new website',
+                    description: 'Connected "My WordPress Blog" to the platform',
+                    time: '2 hours ago'
+                },
+                {
+                    type: 'indexing',
+                    title: 'Submitted URLs to Google',
+                    description: 'Successfully indexed 5 pages',
+                    time: '1 day ago'
+                },
+                {
+                    type: 'edit',
+                    title: 'Bulk edit completed',
+                    description: 'Updated SEO data for 12 pages',
+                    time: '3 days ago'
+                }
+            ];
+
+            if (activities.length === 0) {
+                activityFeed.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p>No recent activity found.</p>
+                    </div>
+                `;
+            } else {
+                activityFeed.innerHTML = activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="activity-icon ${activity.type}">
+                            ${activity.type === 'website' ? '🌐' : activity.type === 'indexing' ? '🔗' : '📝'}
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">${activity.title}</div>
+                            <div class="activity-description">${activity.description}</div>
+                            <div class="activity-time">${activity.time}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function showAlert(message, type = 'error') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('updateBtn');
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+
+            const formData = new FormData(event.target);
+            const data = {
+                display_name: formData.get('display_name'),
+                email: formData.get('email'),
+                current_password: formData.get('current_password'),
+                new_password: formData.get('new_password'),
+                confirm_password: formData.get('confirm_password')
+            };
+
+            // Client-side validation
+            if (data.new_password && data.new_password !== data.confirm_password) {
+                showAlert('New passwords do not match.');
+                resetButton(btn);
+                return;
+            }
+
+            if (data.new_password && data.new_password.length < 6) {
+                showAlert('New password must be at least 6 characters long.');
+                resetButton(btn);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Profile updated successfully!', 'success');
+                    
+                    // Update all UI elements with new username
+                    const newUsername = result.user.username;
+                    const newEmail = result.user.email;
+                    
+                    // Update profile page elements
+                    document.getElementById('profileName').textContent = newUsername;
+                    document.getElementById('profileEmail').textContent = newEmail;
+                    const initial = newUsername.charAt(0).toUpperCase();
+                    document.getElementById('profileAvatar').textContent = initial;
+                    
+                    // Update header elements (base layout)
+                    document.getElementById('userName').textContent = newUsername;
+                    document.getElementById('userAvatar').textContent = initial;
+                    
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    
+                    // Update original profile data
+                    originalProfileData = {
+                        username: newUsername,
+                        email: newEmail
+                    };
+                    
+                } else {
+                    showAlert(result.message, 'error');
+                }
+                
+            } catch (error) {
+                showAlert('Failed to update profile. Please try again.', 'error');
+            } finally {
+                resetButton(btn);
+            }
+        }
+
+        function resetButton(btn) {
+            btn.disabled = false;
+            btn.textContent = 'Update Profile';
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset all changes?')) {
+                document.getElementById('displayName').value = originalProfileData.username;
+                document.getElementById('emailAddress').value = originalProfileData.email;
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                showAlert('Form reset to original values.', 'warning');
+            }
+        }
+
+        function deleteAccount() {
+            const confirmText = 'DELETE';
+            const userInput = prompt(
+                `This action cannot be undone. This will permanently delete your account and all associated data.\n\nType "${confirmText}" to confirm:`
+            );
+
+            if (userInput === confirmText) {
+                if (confirm('Are you absolutely sure? This action is irreversible.')) {
+                    // In real implementation, this would call the backend to delete the account
+                    showAlert('Account deletion would be processed. (This is a demo)', 'error');
+                }
+            } else if (userInput !== null) {
+                showAlert('Account deletion cancelled - confirmation text did not match.', 'warning');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

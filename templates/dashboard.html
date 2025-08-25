@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - WordPress API Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-section {
+        background: linear-gradient(135deg, var(--accent-primary), #7c3aed);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-subtitle {
+        opacity: 0.9;
+        font-size: 1.25rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        padding: 2rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .stat-icon.blue {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-primary);
+    }
+
+    .stat-icon.green {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .stat-icon.purple {
+        background: rgba(124, 58, 237, 0.1);
+        color: #7c3aed;
+    }
+
+    .stat-icon.orange {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        color: var(--success);
+        font-weight: 500;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .activity-icon.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .activity-icon.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--error);
+    }
+
+    .activity-details h4 {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-details p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .quick-action {
+        display: block;
+        padding: 1.5rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .quick-action:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+        transform: translateY(-1px);
+    }
+
+    .quick-action:last-child {
+        margin-bottom: 0;
+    }
+
+    .quick-action h4 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .quick-action p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .quick-action .completion-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 24px;
+        height: 24px;
+        background: var(--success);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .welcome-section {
+            padding: 2rem 1rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+    <h1 class="welcome-title">Welcome back!</h1>
+    <p class="welcome-subtitle">Effortlessly manage your WordPress websites with powerful REST API tools.</p>
+</section>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Total Websites</span>
+            <div class="stat-icon blue">🌐</div>
+        </div>
+        <div class="stat-value" id="totalWebsites">{{ stats.total_websites }}</div>
+        <div class="stat-change">+{{ stats.total_websites }} managed</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Indexing Requests</span>
+            <div class="stat-icon green">🔗</div>
+        </div>
+        <div class="stat-value" id="indexingRequests">{{ stats.total_indexing_requests }}</div>
+        <div class="stat-change">+{{ stats.total_indexing_requests }} submitted</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Successful Submissions</span>
+            <div class="stat-icon purple">✅</div>
+        </div>
+        <div class="stat-value" id="successfulSubmissions">{{ stats.successful_indexing }}</div>
+        <div class="stat-change">{{ stats.success_rate }}% success rate</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Pages Managed</span>
+            <div class="stat-icon orange">📝</div>
+        </div>
+        <div class="stat-value" id="pagesManaged">0</div>
+        <div class="stat-change">Content optimization</div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <div class="card">
+        <h3 class="card-title">Recent Activity</h3>
+        <div id="recentActivity">
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <p>No recent activity found. Start by adding a website!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Quick Actions</h3>
+        
+        <a href="/manage-websites" class="quick-action" id="action-websites">
+            <h4>🌐 Add Website</h4>
+            <p>Connect a new WordPress website to manage.</p>
+            <div class="completion-badge" id="websites-badge" style="display: none;">✓</div>
+        </a>
+
+        <a href="/api-index-settings" class="quick-action" id="action-api">
+            <h4>⚙️ Configure APIs</h4>
+            <p>Set up Google Indexing API credentials.</p>
+            <div class="completion-badge" id="api-badge" style="display: none;">✓</div>
+        </a>
+
+        <a href="/index-api" class="quick-action" id="action-indexing">
+            <h4>🔗 Submit to Google</h4>
+            <p>Request indexing for your website URLs.</p>
+            <div class="completion-badge" id="indexing-badge" style="display: none;">✓</div>
+        </a>
+
+        <a href="/single-page-editor" class="quick-action" id="action-single">
+            <h4>📝 Edit Single Page</h4>
+            <p>Edit individual WordPress posts and pages.</p>
+            <div class="completion-badge" id="single-badge" style="display: none;">✓</div>
+        </a>
+
+        <a href="/bulk-page-editor" class="quick-action" id="action-bulk">
+            <h4>📚 Bulk Edit Pages</h4>
+            <p>Edit multiple pages simultaneously with CSV.</p>
+            <div class="completion-badge" id="bulk-badge" style="display: none;">✓</div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load dashboard-specific data
+    window.addEventListener('load', function() {
+        loadDashboardStats();
+        updateCompletionBadges();
+    });
+
+    async function loadDashboardStats() {
+        try {
+            // Load recent activity
+            const activityResponse = await fetch('/api/dashboard-stats');
+            if (activityResponse.ok) {
+                const data = await activityResponse.json();
+                displayRecentActivity(data.recent_logs);
+            }
+        } catch (error) {
+            console.error('Failed to load dashboard stats:', error);
+        }
+    }
+
+    async function updateCompletionBadges() {
+        try {
+            const response = await fetch('/api/completion-status');
+            if (response.ok) {
+                const status = await response.json();
+                
+                // Update completion badges
+                if (status.has_websites) document.getElementById('websites-badge').style.display = 'flex';
+                if (status.has_api_config) document.getElementById('api-badge').style.display = 'flex';
+                if (status.has_indexing_activity) document.getElementById('indexing-badge').style.display = 'flex';
+                if (status.has_edited_pages) {
+                    document.getElementById('single-badge').style.display = 'flex';
+                    document.getElementById('bulk-badge').style.display = 'flex';
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load completion status:', error);
+        }
+    }
+
+    function displayRecentActivity(logs) {
+        const activityContainer = document.getElementById('recentActivity');
+        
+        if (!logs || logs.length === 0) {
+            activityContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <p>No recent activity found. Start by adding a website!</p>
+                </div>
+            `;
+            return;
+        }
+
+        activityContainer.innerHTML = logs.map(log => `
+            <div class="activity-item">
+                <div class="activity-icon ${log.status}">
+                    ${log.status === 'success' ? '✅' : '❌'}
+                </div>
+                <div class="activity-details">
+                    <h4>${log.action} - ${log.website_name}</h4>
+                    <p>${log.url}</p>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">${log.created_at}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+</script>
+{% endblock %}

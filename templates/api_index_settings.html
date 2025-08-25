@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Index Settings - WordPress API Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 260px;
+            height: calc(100vh - 70px);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #f1f5f9;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: calc(100vh - 70px);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-box h3 {
+            color: #0c4a6e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p {
+            color: #0369a1;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .setup-steps {
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .setup-steps h3 {
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .setup-steps ol {
+            color: #d97706;
+            padding-left: 1.5rem;
+        }
+
+        .setup-steps li {
+            margin-bottom: 0.75rem;
+        }
+
+        .setup-steps li strong {
+            color: #92400e;
+        }
+
+        .website-config {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: #f8fafc;
+        }
+
+        .website-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .website-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .website-url {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: 'Monaco', 'Courier New', monospace;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .form-group textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4338ca;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+
+        .alert.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .alert.warning {
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            color: #d97706;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.configured {
+            background: #10b981;
+        }
+
+        .status-dot.not-configured {
+            background: #ef4444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1>WordPress API Manager</h1>
+        </div>
+        <div class="user-menu">
+            <div class="user-info">
+                <span id="username">User</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <nav class="sidebar">
+        <a href="/dashboard" class="nav-item">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </a>
+        <a href="/manage-websites" class="nav-item">
+            <span class="nav-icon">🌐</span>
+            Manage Websites
+        </a>
+        <a href="/index-api" class="nav-item">
+            <span class="nav-icon">🔗</span>
+            Index API
+        </a>
+        <a href="/api-index-settings" class="nav-item active">
+            <span class="nav-icon">⚙️</span>
+            API Settings
+        </a>
+        <a href="/single-page-editor" class="nav-item">
+            <span class="nav-icon">📝</span>
+            Single Page Editor
+        </a>
+        <a href="/bulk-page-editor" class="nav-item">
+            <span class="nav-icon">📚</span>
+            Bulk Page Editor
+        </a>
+        <a href="/user-profile" class="nav-item">
+            <span class="nav-icon">👤</span>
+            User Profile
+        </a>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">API Index Settings</h1>
+            <p class="page-subtitle">Configure Google Indexing API credentials for your websites</p>
+        </div>
+
+        <div class="info-box">
+            <h3>Service Account Keys</h3>
+            <p>Paste the JSON content of the Service Account Key file you downloaded from Google Cloud Console for each website. Ensure the service account has the "Owner" role for the corresponding property in Google Search Console and the Indexing API is enabled in Google Cloud.</p>
+        </div>
+
+        <div class="setup-steps">
+            <h3>Setup Instructions</h3>
+            <ol>
+                <li><strong>Create Google Cloud Project:</strong> Go to Google Cloud Console and create a new project</li>
+                <li><strong>Enable Indexing API:</strong> In APIs & Services > Library, search for and enable "Web Search Indexing API"</li>
+                <li><strong>Create Service Account:</strong> Go to IAM & Admin > Service Accounts and create a new service account</li>
+                <li><strong>Generate Key:</strong> Create a JSON key for the service account and download it</li>
+                <li><strong>Add to Search Console:</strong> Add the service account email as an Owner in Google Search Console</li>
+                <li><strong>Paste JSON Below:</strong> Copy the entire JSON content and paste it in the corresponding website field below</li>
+            </ol>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="card">
+            <h2 class="card-title">Service Account Keys</h2>
+            <div id="websitesList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚙️</div>
+                    <h3>No websites found</h3>
+                    <p>Please add a website first in the <a href="/manage-websites">Manage Websites</a> section.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.addEventListener('load', function() {
+            loadUserProfile();
+            loadWebsites();
+        });
+
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/user-profile');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('username').textContent = user.username;
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        async function loadWebsites() {
+            try {
+                const response = await fetch('/api/websites');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        displayWebsiteSettings(result.websites);
+                    } else {
+                        showEmptyState();
+                    }
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Failed to load websites:', error);
+                showEmptyState();
+            }
+        }
+
+        function displayWebsiteSettings(websites) {
+            const websitesList = document.getElementById('websitesList');
+            
+            if (websites.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            websitesList.innerHTML = websites.map(website => `
+                <div class="website-config">
+                    <div class="website-header">
+                        <div>
+                            <div class="website-title">${website.website_name}</div>
+                            <div class="website-url">${website.website_url}</div>
+                        </div>
+                        <div class="status-indicator" id="status_${website.id}">
+                            <div class="status-dot ${website.has_service_account ? 'configured' : 'not-configured'}"></div>
+                            ${website.has_service_account ? 'Configured' : 'Not Configured'}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceAccount_${website.id}">Service Account Key (JSON Content)</label>
+                        <textarea 
+                            id="serviceAccount_${website.id}" 
+                            placeholder="Paste your Google Service Account JSON content here..."
+                        ></textarea>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="clearServiceAccount(${website.id}, this)">Clear Key</button>
+                        <button type="button" class="btn btn-primary" onclick="updateServiceAccount(${website.id}, this)">Update Key</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showEmptyState() {
+            const websitesList = document.getElementById('websitesList');
+            websitesList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚙️</div>
+                    <h3>No websites found</h3>
+                    <p>Please add a website first in the <a href="/manage-websites">Manage Websites</a> section.</p>
+                </div>
+            `;
+        }
+
+        function showAlert(message, type = 'error') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        async function updateServiceAccount(websiteId, button) {
+            const textarea = document.getElementById(`serviceAccount_${websiteId}`);
+            const serviceAccountJson = textarea.value.trim();
+
+            if (!serviceAccountJson) {
+                showAlert('Please paste the Service Account JSON content.');
+                return;
+            }
+
+            // Validate JSON
+            try {
+                JSON.parse(serviceAccountJson);
+            } catch (e) {
+                showAlert('Invalid JSON format. Please check your Service Account key.');
+                return;
+            }
+
+            // Set loading state
+            button.disabled = true;
+            button.textContent = 'Updating...';
+
+            try {
+                const response = await fetch('/api/update-service-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        website_id: websiteId,
+                        service_account_json: serviceAccountJson
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('Service Account key updated successfully!', 'success');
+                    // Update status indicator
+                    const statusIndicator = document.getElementById(`status_${websiteId}`);
+                    if (statusIndicator) {
+                        statusIndicator.innerHTML = `
+                            <div class="status-dot configured"></div>
+                            Configured
+                        `;
+                    }
+                } else {
+                    showAlert(result.message);
+                }
+            } catch (error) {
+                showAlert('Connection error. Please try again.');
+            } finally {
+                // Reset button state
+                button.disabled = false;
+                button.textContent = 'Update Key';
+            }
+        }
+
+        function clearServiceAccount(websiteId, button) {
+            if (confirm('Are you sure you want to clear the Service Account key? This will disable Google Indexing API for this website.')) {
+                const textarea = document.getElementById(`serviceAccount_${websiteId}`);
+                textarea.value = '';
+                
+                // Update status indicator
+                const statusIndicator = document.getElementById(`status_${websiteId}`);
+                if (statusIndicator) {
+                    statusIndicator.innerHTML = `
+                        <div class="status-dot not-configured"></div>
+                        Not Configured
+                    `;
+                }
+                
+                showAlert('Service Account key cleared.', 'warning');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>
