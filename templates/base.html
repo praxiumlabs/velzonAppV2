@@ -4,37 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}WordPress API Manager{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #1d4ed8;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --border-color: #475569;
-            --card-bg: #1e293b;
-        }
-
-        [data-theme="light"] {
+            /* Light theme */
             --bg-primary: #ffffff;
             --bg-secondary: #f8fafc;
             --bg-tertiary: #f1f5f9;
-            --text-primary: #1e293b;
+            --bg-card: #ffffff;
+            --bg-elevated: #ffffff;
+            --text-primary: #0f172a;
             --text-secondary: #334155;
-            --text-muted: #64748b;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #1d4ed8;
+            --text-tertiary: #64748b;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #4f46e5;
+            --accent-tertiary: #8b5cf6;
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
-            --border-color: #e2e8f0;
-            --card-bg: #ffffff;
+            --info: #3b82f6;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --border-strong: #94a3b8;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-secondary: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --bg-elevated: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #e2e8f0;
+            --text-tertiary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #4f46e5;
+            --accent-tertiary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --border-light: #334155;
+            --border-medium: #475569;
+            --border-strong: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-secondary: linear-gradient(135deg, #1e293b, #334155);
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -43,232 +75,495 @@
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv11', 'ss01';
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 400;
+            overflow-x: hidden;
         }
 
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+
+        /* Header */
         .header {
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 2rem;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 100;
-            height: 70px;
+            height: 72px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            padding: 0 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-secondary);
+            opacity: 0.5;
+            z-index: -1;
         }
 
         .logo {
             display: flex;
             align-items: center;
             gap: 12px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--text-primary);
+            text-decoration: none;
         }
 
-        .logo h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--accent-primary);
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            box-shadow: var(--shadow-md);
         }
 
         .user-section {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 16px;
         }
 
-        .greeting {
+        .user-profile {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            color: var(--text-secondary);
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .user-profile:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-medium);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-primary), #7c3aed);
+            background: var(--gradient-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
+            font-size: 14px;
         }
 
-        .theme-toggle {
-            padding: 0.5rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.2s;
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-greeting {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .user-name {
+            font-size: 14px;
             color: var(--text-primary);
+            font-weight: 600;
         }
 
-        .theme-toggle:hover {
-            background: var(--accent-primary);
-            color: white;
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .logout-btn {
-            padding: 0.5rem 1rem;
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 18px;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-btn.logout {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: var(--error);
+        }
+
+        .action-btn.logout:hover {
             background: var(--error);
             color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
         }
 
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-        }
-
+        /* Sidebar */
         .sidebar {
             position: fixed;
-            top: 70px;
+            top: 72px;
             left: 0;
-            width: 260px;
-            height: calc(100vh - 70px);
-            background: var(--card-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 2rem 0;
+            width: 280px;
+            height: calc(100vh - 72px);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-light);
+            padding: 24px 0;
             overflow-y: auto;
-            transition: all 0.3s ease;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-section {
+            padding: 0 20px 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+            padding: 0 16px;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 24px;
-            color: var(--text-muted);
+            padding: 12px 16px;
+            margin: 2px 0;
+            border-radius: 12px;
+            color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.2s;
+            font-size: 14px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            overflow: hidden;
         }
 
-        .nav-item:hover, .nav-item.active {
-            background: rgba(59, 130, 246, 0.1);
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-primary);
+            transform: scaleY(0);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:hover {
+            background: var(--bg-secondary);
             color: var(--accent-primary);
-            border-right: 3px solid var(--accent-primary);
+            transform: translateX(4px);
         }
 
-        .nav-item .nav-icon {
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-icon {
             width: 20px;
             height: 20px;
-            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
         }
 
-        .nav-item .completion-check {
-            margin-left: auto;
-            color: var(--success);
-            font-size: 16px;
-        }
 
+        /* Main Content */
         .main-content {
-            margin-top: 70px;
-            margin-left: 260px;
-            padding: 2rem;
-            min-height: calc(100vh - 70px);
-            padding-bottom: 80px; /* Space for footer */
-        }
-
-        .footer {
-            background: var(--card-bg);
-            border-top: 1px solid var(--border-color);
-            padding: 1.5rem 2rem;
-            margin-left: 260px;
-            margin-top: 2rem;
-            text-align: center;
-            color: var(--text-muted);
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .footer-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.875rem;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: var(--accent-primary);
+            margin-top: 72px;
+            margin-left: 280px;
+            padding: 32px;
+            min-height: calc(100vh - 72px);
+            background: var(--bg-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .page-header {
-            margin-bottom: 2rem;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .page-title {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 32px;
+            font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .page-subtitle {
-            color: var(--text-muted);
-            font-size: 1.125rem;
+            font-size: 16px;
+            color: var(--text-tertiary);
+            font-weight: 400;
+            max-width: 600px;
         }
 
+        /* Cards */
         .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            border: 1px solid var(--border-color);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            transition: all 0.3s ease;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card:hover {
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
 
         .card-title {
-            font-size: 1.25rem;
+            font-size: 20px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
+        .card-title-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gradient-primary);
             border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-medium);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px 0 rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled::before {
+            display: none;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border-radius: 12px;
             display: none;
             border-left: 4px solid;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: currentColor;
+            opacity: 0.3;
         }
 
         .alert.success {
@@ -291,219 +586,237 @@
 
         .alert.info {
             background: rgba(59, 130, 246, 0.1);
-            border-color: var(--accent-primary);
+            border-color: var(--info);
+            color: var(--info);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-light);
+            padding: 24px 32px;
+            margin-left: 280px;
+            margin-top: 48px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-text {
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
             color: var(--accent-primary);
         }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--accent-primary);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-secondary);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--border-color);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover:not(:disabled) {
-            background: #059669;
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: var(--error);
-            color: white;
-        }
-
-        .btn-danger:hover:not(:disabled) {
-            background: #dc2626;
-            transform: translateY(-1px);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            color: var(--text-primary);
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: var(--text-muted);
-        }
-
+        /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
             }
-            
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
             .main-content,
             .footer {
                 margin-left: 0;
             }
-            
-            .mobile-menu-btn {
-                display: block;
+
+            .header {
+                padding: 0 16px;
+            }
+
+            .main-content {
+                padding: 24px 16px;
             }
         }
 
         @media (max-width: 768px) {
-            .header {
-                padding: 0 1rem;
+            .page-title {
+                font-size: 24px;
             }
-            
-            .main-content {
-                padding: 1rem;
+
+            .page-subtitle {
+                font-size: 14px;
             }
-            
-            .greeting span {
+
+            .card {
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+
+            .user-info {
                 display: none;
             }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
         }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
+        /* Loading States */
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
+        /* Mobile Menu Toggle */
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--bg-card);
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 20px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-primary);
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body data-theme="dark">
+    <!-- Header -->
     <header class="header">
         <div class="logo">
-            <h1>WordPress API Manager</h1>
+            <div class="logo-icon">⚡</div>
+            API Manager
         </div>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">
+            ☰
+        </button>
+
         <div class="user-section">
-            <div class="greeting">
+            <div class="user-profile">
                 <div class="user-avatar" id="userAvatar">U</div>
-                <span id="greeting">Good day</span>
-                <span id="userName">User</span>
+                <div class="user-info">
+                    <div class="user-greeting" id="greeting">Good day</div>
+                    <div class="user-name" id="userName">User</div>
+                </div>
             </div>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+
+            <div class="header-actions">
+                <button class="action-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Theme">
+                    🌙
+                </button>
+                <button class="action-btn logout" onclick="logout()" title="Logout">
+                    🚪
+                </button>
+            </div>
         </div>
     </header>
 
+    <!-- Sidebar -->
     {% if not hide_sidebar %}
-    <nav class="sidebar">
-        <a href="/dashboard" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-            <span class="nav-icon">📊</span>
-            Dashboard
-            <span class="completion-check" id="dashboard-check" style="display: none;"></span>
-        </a>
-        <a href="/manage-websites" class="nav-item {% if request.endpoint == 'manage_websites' %}active{% endif %}">
-            <span class="nav-icon">🌐</span>
-            Manage Websites
-            <span class="completion-check" id="websites-check" style="display: none;"></span>
-        </a>
-        <a href="/index-api" class="nav-item {% if request.endpoint == 'index_api' %}active{% endif %}">
-            <span class="nav-icon">🔗</span>
-            Index API
-            <span class="completion-check" id="indexing-check" style="display: none;"></span>
-        </a>
-        <a href="/api-index-settings" class="nav-item {% if request.endpoint == 'api_index_settings' %}active{% endif %}">
-            <span class="nav-icon">⚙️</span>
-            API Settings
-            <span class="completion-check" id="api-check" style="display: none;"></span>
-        </a>
-        <a href="/single-page-editor" class="nav-item {% if request.endpoint == 'single_page_editor' %}active{% endif %}">
-            <span class="nav-icon">📝</span>
-            Single Page Editor
-            <span class="completion-check" id="single-edit-check" style="display: none;"></span>
-        </a>
-        <a href="/bulk-page-editor" class="nav-item {% if request.endpoint == 'bulk_page_editor' %}active{% endif %}">
-            <span class="nav-icon">📚</span>
-            Bulk Page Editor
-            <span class="completion-check" id="bulk-edit-check" style="display: none;"></span>
-        </a>
-        <a href="/user-profile" class="nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
-            <span class="nav-icon">👤</span>
-            User Profile
-            <span class="completion-check" id="profile-check" style="display: none;"></span>
-        </a>
+    <nav class="sidebar" id="sidebar">
+        <div class="nav-section">
+            <div class="nav-section-title">Overview</div>
+            <a href="/dashboard" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">📊</span>
+                Dashboard
+                <span class="nav-badge" id="dashboard-badge" style="display: none;"></span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <a href="/manage-websites" class="nav-item {% if request.endpoint == 'manage_websites' %}active{% endif %}">
+                <span class="nav-icon">🌐</span>
+                Manage Websites
+                <span class="nav-badge" id="websites-badge" style="display: none;"></span>
+            </a>
+            <a href="/api-index-settings" class="nav-item {% if request.endpoint == 'api_index_settings' %}active{% endif %}">
+                <span class="nav-icon">⚙️</span>
+                API Settings
+                <span class="nav-badge" id="api-badge" style="display: none;"></span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Tools</div>
+            <a href="/index-api" class="nav-item {% if request.endpoint == 'index_api' %}active{% endif %}">
+                <span class="nav-icon">🔗</span>
+                Index API
+                <span class="nav-badge" id="indexing-badge" style="display: none;"></span>
+            </a>
+            <a href="/single-page-editor" class="nav-item {% if request.endpoint == 'single_page_editor' %}active{% endif %}">
+                <span class="nav-icon">📝</span>
+                Single Page Editor
+                <span class="nav-badge" id="single-edit-badge" style="display: none;"></span>
+            </a>
+            <a href="/bulk-page-editor" class="nav-item {% if request.endpoint == 'bulk_page_editor' %}active{% endif %}">
+                <span class="nav-icon">📚</span>
+                Bulk Page Editor
+                <span class="nav-badge" id="bulk-edit-badge" style="display: none;"></span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Account</div>
+            <a href="/user-profile" class="nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
+                <span class="nav-icon">👤</span>
+                User Profile
+                <span class="nav-badge" id="profile-badge" style="display: none;"></span>
+            </a>
+        </div>
     </nav>
     {% endif %}
 
+    <!-- Main Content -->
     <main class="main-content">
         <div id="alert" class="alert"></div>
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
-            <div>
-                <p>&copy; 2025 WordPress API Manager. Built with ❤️ for WordPress professionals.</p>
+            <div class="footer-text">
+                &copy; 2025 WordPress API Manager. Built with ❤️ for professionals.
             </div>
             <div class="footer-links">
                 <a href="#" onclick="showAbout()">About</a>
@@ -526,6 +839,7 @@
             initTheme();
         });
 
+        // User profile loading
         async function loadUserProfile() {
             try {
                 const response = await fetch('/api/user-profile');
@@ -533,7 +847,7 @@
                     currentUser = await response.json();
                     document.getElementById('userName').textContent = currentUser.username;
                     
-                    // Update avatar
+                    // Update avatar with gradient
                     const initial = currentUser.username.charAt(0).toUpperCase();
                     document.getElementById('userAvatar').textContent = initial;
                 } else {
@@ -545,6 +859,7 @@
             }
         }
 
+        // Update greeting based on time
         function updateGreeting() {
             const hour = new Date().getHours();
             const greetingElement = document.getElementById('greeting');
@@ -558,27 +873,36 @@
             }
         }
 
+        // Check completion status for badges
         async function checkCompletionStatus() {
             try {
                 const response = await fetch('/api/completion-status');
                 if (response.ok) {
                     const status = await response.json();
                     
-                    // Update completion checkmarks
-                    if (status.has_websites) document.getElementById('websites-check').style.display = 'inline';
-                    if (status.has_api_config) document.getElementById('api-check').style.display = 'inline';
-                    if (status.has_indexing_activity) document.getElementById('indexing-check').style.display = 'inline';
+                    // Update completion badges
+                    if (status.has_websites) showBadge('websites-badge');
+                    if (status.has_api_config) showBadge('api-badge');
+                    if (status.has_indexing_activity) showBadge('indexing-badge');
                     if (status.has_edited_pages) {
-                        document.getElementById('single-edit-check').style.display = 'inline';
-                        document.getElementById('bulk-edit-check').style.display = 'inline';
+                        showBadge('single-edit-badge');
+                        showBadge('bulk-edit-badge');
                     }
-                    if (status.profile_updated) document.getElementById('profile-check').style.display = 'inline';
+                    if (status.profile_updated) showBadge('profile-badge');
                 }
             } catch (error) {
                 console.error('Failed to load completion status:', error);
             }
         }
 
+        function showBadge(badgeId) {
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                badge.style.display = 'inline-block';
+            }
+        }
+
+        // Theme management
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.body.setAttribute('data-theme', savedTheme);
@@ -597,19 +921,41 @@
         function updateThemeToggle(theme) {
             const toggle = document.getElementById('themeToggle');
             toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            toggle.title = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
         }
 
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            
+            if (window.innerWidth <= 1024) {
+                if (!sidebar.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        // Alert system
         function showAlert(message, type = 'error') {
             const alert = document.getElementById('alert');
             alert.textContent = message;
             alert.className = `alert ${type}`;
             alert.style.display = 'block';
             
+            // Auto-hide after 6 seconds
             setTimeout(() => {
                 alert.style.display = 'none';
-            }, 5000);
+            }, 6000);
         }
 
+        // Logout function
         async function logout() {
             try {
                 await fetch('/api/logout', { method: 'POST' });
@@ -621,15 +967,15 @@
 
         // Footer modal functions
         function showAbout() {
-            alert('WordPress API Manager v1.0\n\nA professional tool for managing multiple WordPress websites through REST APIs and Google Indexing API integration.');
+            alert('WordPress API Manager v2.0\n\nA professional tool for managing multiple WordPress websites through REST APIs and Google Indexing API integration.\n\nBuilt with modern web technologies for optimal performance.');
         }
 
         function showHelp() {
-            window.open('/help', '_blank');
+            alert('Help & Support\n\n1. Add your WordPress websites in Manage Websites\n2. Configure API settings for Google Indexing\n3. Use the editing tools to manage content\n4. Submit URLs for faster indexing\n\nFor detailed documentation, visit our GitHub repository.');
         }
 
         function showPrivacy() {
-            alert('Privacy Policy\n\nWe respect your privacy. All data is stored locally and securely. No personal information is shared with third parties.');
+            alert('Privacy Policy\n\nWe respect your privacy and data security:\n\n• All data is stored securely and locally\n• No personal information is shared with third parties\n• API credentials are encrypted\n• Regular security updates are applied\n\nLast updated: January 2025');
         }
     </script>
     {% block extra_js %}{% endblock %}

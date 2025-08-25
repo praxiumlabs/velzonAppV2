@@ -57,6 +57,12 @@
         border-radius: 8px;
         padding: 1rem;
         text-align: center;
+        transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
     }
 
     .stat-number {
@@ -69,6 +75,20 @@
     .stat-label {
         font-size: 0.875rem;
         color: var(--text-muted);
+    }
+
+    .loading-stat {
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+        height: 24px;
+        width: 40px;
+        margin: 0 auto 0.25rem;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
     }
 
     .form-group input {
@@ -229,19 +249,27 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number" id="totalWebsites">0</div>
+                    <div class="stat-number" id="totalWebsites">
+                        <div class="loading-stat"></div>
+                    </div>
                     <div class="stat-label">Websites</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="totalRequests">0</div>
+                    <div class="stat-number" id="totalRequests">
+                        <div class="loading-stat"></div>
+                    </div>
                     <div class="stat-label">API Requests</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="pagesEdited">0</div>
+                    <div class="stat-number" id="pagesEdited">
+                        <div class="loading-stat"></div>
+                    </div>
                     <div class="stat-label">Pages Edited</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="successRate">0%</div>
+                    <div class="stat-number" id="successRate">
+                        <div class="loading-stat"></div>
+                    </div>
                     <div class="stat-label">Success Rate</div>
                 </div>
             </div>
@@ -292,7 +320,7 @@
             <div class="activity-feed" id="activityFeed">
                 <div class="empty-state">
                     <div class="empty-state-icon">📝</div>
-                    <p>No recent activity found.</p>
+                    <p>Loading recent activity...</p>
                 </div>
             </div>
         </div>
@@ -355,67 +383,118 @@
 
     async function loadUserStats() {
         try {
-            // In a real implementation, this would fetch from the backend
-            const response = await fetch('/api/dashboard-stats');
+            const response = await fetch('/api/user-stats');
             if (response.ok) {
-                const data = await response.json();
-                // Update stats based on actual data
-                document.getElementById('totalWebsites').textContent = '3';
-                document.getElementById('totalRequests').textContent = '147';
-                document.getElementById('pagesEdited').textContent = '42';
-                document.getElementById('successRate').textContent = '98%';
+                const stats = await response.json();
+                
+                // Update stats with real data and smooth counting animation
+                animateCounter('totalWebsites', stats.total_websites);
+                animateCounter('totalRequests', stats.total_requests);
+                animateCounter('pagesEdited', stats.pages_edited);
+                animateCounter('successRate', stats.success_rate, '%');
+            } else {
+                // Fallback to zeros if API fails
+                document.getElementById('totalWebsites').textContent = '0';
+                document.getElementById('totalRequests').textContent = '0';
+                document.getElementById('pagesEdited').textContent = '0';
+                document.getElementById('successRate').textContent = '0%';
             }
         } catch (error) {
             console.error('Failed to load user stats:', error);
+            // Fallback to zeros if request fails
+            document.getElementById('totalWebsites').textContent = '0';
+            document.getElementById('totalRequests').textContent = '0';
+            document.getElementById('pagesEdited').textContent = '0';
+            document.getElementById('successRate').textContent = '0%';
         }
     }
 
-    function loadRecentActivity() {
+    function animateCounter(elementId, finalValue, suffix = '') {
+        const element = document.getElementById(elementId);
+        const duration = 1500; // 1.5 seconds
+        const startTime = Date.now();
+        const startValue = 0;
+
+        function updateCounter() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Ease out animation
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(startValue + (finalValue - startValue) * easeOut);
+            
+            element.textContent = currentValue + suffix;
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            }
+        }
+        
+        // Remove loading state and start animation
+        const loadingElement = element.querySelector('.loading-stat');
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+        
+        updateCounter();
+    }
+
+    async function loadRecentActivity() {
+        try {
+            const response = await fetch('/api/user-activity');
+            if (response.ok) {
+                const data = await response.json();
+                displayActivity(data.activities);
+            } else {
+                showEmptyActivity();
+            }
+        } catch (error) {
+            console.error('Failed to load recent activity:', error);
+            showEmptyActivity();
+        }
+    }
+
+    function displayActivity(activities) {
         const activityFeed = document.getElementById('activityFeed');
         
-        // Sample activity data
-        const activities = [
-            {
-                type: 'website',
-                title: 'Added new website',
-                description: 'Connected "My WordPress Blog" to the platform',
-                time: '2 hours ago'
-            },
-            {
-                type: 'indexing',
-                title: 'Submitted URLs to Google',
-                description: 'Successfully indexed 5 pages',
-                time: '1 day ago'
-            },
-            {
-                type: 'edit',
-                title: 'Bulk edit completed',
-                description: 'Updated SEO data for 12 pages',
-                time: '3 days ago'
-            }
-        ];
-
-        if (activities.length === 0) {
-            activityFeed.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📝</div>
-                    <p>No recent activity found.</p>
-                </div>
-            `;
-        } else {
-            activityFeed.innerHTML = activities.map(activity => `
-                <div class="activity-item">
-                    <div class="activity-icon ${activity.type}">
-                        ${activity.type === 'website' ? '🌐' : activity.type === 'indexing' ? '🔗' : '📝'}
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">${activity.title}</div>
-                        <div class="activity-description">${activity.description}</div>
-                        <div class="activity-time">${activity.time}</div>
-                    </div>
-                </div>
-            `).join('');
+        if (!activities || activities.length === 0) {
+            showEmptyActivity();
+            return;
         }
+
+        activityFeed.innerHTML = activities.map(activity => `
+            <div class="activity-item">
+                <div class="activity-icon ${activity.type}">
+                    ${getActivityIcon(activity.type)}
+                </div>
+                <div class="activity-details">
+                    <div class="activity-title">${activity.title}</div>
+                    <div class="activity-description">${activity.description}</div>
+                    <div class="activity-time">${activity.time}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showEmptyActivity() {
+        const activityFeed = document.getElementById('activityFeed');
+        activityFeed.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <p>No recent activity found.</p>
+            </div>
+        `;
+    }
+
+    function getActivityIcon(type) {
+        const icons = {
+            'website': '🌐',
+            'indexing': '🔗',
+            'edit': '📝',
+            'api': '⚙️',
+            'profile': '👤'
+        };
+        return icons[type] || '📋';
     }
 
     async function updateProfile(event) {
@@ -485,6 +564,9 @@
                     username: newUsername,
                     email: newEmail
                 };
+                
+                // Reload activity to show the profile update
+                loadRecentActivity();
                 
             } else {
                 showAlert(result.message, 'error');
